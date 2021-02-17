@@ -1,0 +1,17 @@
+{
+  "name": "testable-chi-token",
+  "version": "1.0.0",
+  "description": "Clone of 1Inch ChiToken that can be deployed on local test nets",
+  "author": "Felix Leupold",
+  "license": "MIT",
+  "devDependencies": {
+    "hardhat": "^2.0.10"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.0"
+  },
+  "files": [
+    "build/",
+    "src/"
+  ]
+}
