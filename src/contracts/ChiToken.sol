@@ -115,12 +115,11 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
     uint256 public totalMinted;
     uint256 public totalBurned;
 
-    function totalSupply() public view override returns (uint256) {
-        return totalMinted - totalBurned;
-    }
+    bytes32 immutable bytecodeWord1;
+    bytes4 immutable bytecodeWord2;
 
-    // Writes the 36 bytes of subcontract creation code to memory at the specified offset
-    function write_bytecode_to_memory(uint256 offset) internal view {
+    constructor() {
+        bytes32 _bytecodeWord1;
         // Documentation adapted from https://github.com/projectchicago/gastoken/blob/master/contract/GST2_ETH.sol#L105
         //
         // EVM assembler of runtime portion of child contract:
@@ -149,27 +148,26 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         // Almost done! All we have to do is put this short (36 bytes) blob into
         // memory and call CREATE with the appropriate offsets.
         assembly {
-            mstore(
-                offset,
-                add(
-                    add(
-                        0x7a73000000000000000000000000000000000000000000000000000000000000,
-                        shl(0x50, address())
-                    ),
-                    0x3318585733ff60005260
-                )
-            )
-            mstore(
-                add(offset, 32),
-                0x1b6005f300000000000000000000000000000000000000000000000000000000
+            _bytecodeWord1 := add(
+                0x7a7300000000000000000000000000000000000000003318585733ff60005260,
+                shl(0x50, address())
             )
         }
+        bytecodeWord1 = _bytecodeWord1;
+        bytecodeWord2 = 0x1b6005f3;
+    }
+
+    function totalSupply() public view override returns (uint256) {
+        return totalMinted - totalBurned;
     }
 
     function mint(uint256 value) public {
         uint256 offset = totalMinted;
-        write_bytecode_to_memory(0);
+        bytes32 _bytecodeWord1 = bytecodeWord1;
+        bytes4 _bytecodeWord2 = bytecodeWord2;
         assembly {
+            mstore(0, _bytecodeWord1)
+            mstore(32, _bytecodeWord2)
             for {
                 let i := div(value, 32)
             } i {
@@ -226,6 +224,8 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         uint256 data;
         uint256 i;
         uint256 end;
+        bytes32 _bytecodeWord1 = bytecodeWord1;
+        bytes4 _bytecodeWord2 = bytecodeWord2;
         assembly {
             i := sload(totalBurned.slot)
             end := add(i, value)
@@ -239,9 +239,8 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
                     shl(0x58, address())
                 )
             )
-        }
-        write_bytecode_to_memory(data + 53);
-        assembly {
+            mstore(add(data, 53), _bytecodeWord1)
+            mstore(add(data, 85), _bytecodeWord2)
             mstore(add(data, 53), keccak256(add(data, 53), 36))
             let ptr := add(data, 21)
             for {
