@@ -117,9 +117,9 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
 
     bytes32 immutable bytecodeWord1;
     bytes3 immutable bytecodeWord2;
+    bytes32 immutable bytecodeHash;
 
     constructor() {
-        bytes32 _bytecodeWord1;
         // Documentation adapted from https://github.com/projectchicago/gastoken/blob/master/contract/GST2_ETH.sol#L105
         // For more information on the opcodes, cf. https://ethervm.io/
         //
@@ -148,14 +148,16 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         // Or in binary: 7a73____________20 bytes address____________3318585733ff3d52601b6005f3
         // Almost done! All we have to do is put this short (35 bytes) blob into
         // memory and call CREATE with the appropriate offsets.
-        assembly {
-            _bytecodeWord1 := add(
-                0x7a7300000000000000000000000000000000000000003318585733ff3d52601b,
-                shl(0x50, address())
-            )
-        }
+        bytes32 _bytecodeWord1 =
+            bytes32(
+                0x7a7300000000000000000000000000000000000000003318585733ff3d52601b
+            ) | (bytes32(uint256(address(this))) << 80);
+        bytes3 _bytecodeWord2 = 0x6005f3;
+        bytecodeHash = keccak256(
+            abi.encodePacked(_bytecodeWord1, _bytecodeWord2)
+        );
         bytecodeWord1 = _bytecodeWord1;
-        bytecodeWord2 = 0x6005f3;
+        bytecodeWord2 = _bytecodeWord2;
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -225,8 +227,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         uint256 data;
         uint256 i;
         uint256 end;
-        bytes32 _bytecodeWord1 = bytecodeWord1;
-        bytes3 _bytecodeWord2 = bytecodeWord2;
+        bytes32 _bytecodeHash = bytecodeHash;
         assembly {
             i := sload(totalBurned.slot)
             end := add(i, value)
@@ -240,9 +241,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
                     shl(0x58, address())
                 )
             )
-            mstore(add(data, 53), _bytecodeWord1)
-            mstore(add(data, 85), _bytecodeWord2)
-            mstore(add(data, 53), keccak256(add(data, 53), 35))
+            mstore(add(data, 53), _bytecodeHash)
             let ptr := add(data, 21)
             for {
 
