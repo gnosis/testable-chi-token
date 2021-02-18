@@ -116,11 +116,12 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
     uint256 public totalBurned;
 
     bytes32 immutable bytecodeWord1;
-    bytes4 immutable bytecodeWord2;
+    bytes3 immutable bytecodeWord2;
 
     constructor() {
         bytes32 _bytecodeWord1;
         // Documentation adapted from https://github.com/projectchicago/gastoken/blob/master/contract/GST2_ETH.sol#L105
+        // For more information on the opcodes, cf. https://ethervm.io/
         //
         // EVM assembler of runtime portion of child contract:
         //     ;; Pseudocode: if (msg.sender != <address>) { throw; }
@@ -136,7 +137,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         // Since the binary is so short (27 bytes), we can get away
         // with a very simple initcode:
         //     PUSH27 73____________20 bytes address____________3318585733ff
-        //     PUSH1 0
+        //     RETURNDATASIZE ;; Push offset 0 for MSTORE call on the stack
         //     MSTORE ;; at this point, memory locations mem[5] through
         //            ;; mem[31] contain the runtime portion of the child
         //            ;; contract. all that's left to do is to RETURN this
@@ -144,17 +145,17 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         //     PUSH1 27 ;; length
         //     PUSH1 5 ;; offset
         //     RETURN
-        // Or in binary: 7a73____________20 bytes address____________3318585733ff600052601b6005f3
-        // Almost done! All we have to do is put this short (36 bytes) blob into
+        // Or in binary: 7a73____________20 bytes address____________3318585733ff3d52601b6005f3
+        // Almost done! All we have to do is put this short (35 bytes) blob into
         // memory and call CREATE with the appropriate offsets.
         assembly {
             _bytecodeWord1 := add(
-                0x7a7300000000000000000000000000000000000000003318585733ff60005260,
+                0x7a7300000000000000000000000000000000000000003318585733ff3d52601b,
                 shl(0x50, address())
             )
         }
         bytecodeWord1 = _bytecodeWord1;
-        bytecodeWord2 = 0x1b6005f3;
+        bytecodeWord2 = 0x6005f3;
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -173,38 +174,38 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
             } i {
                 i := sub(i, 1)
             } {
-                pop(create2(0, 0, 36, add(offset, 0)))
-                pop(create2(0, 0, 36, add(offset, 1)))
-                pop(create2(0, 0, 36, add(offset, 2)))
-                pop(create2(0, 0, 36, add(offset, 3)))
-                pop(create2(0, 0, 36, add(offset, 4)))
-                pop(create2(0, 0, 36, add(offset, 5)))
-                pop(create2(0, 0, 36, add(offset, 6)))
-                pop(create2(0, 0, 36, add(offset, 7)))
-                pop(create2(0, 0, 36, add(offset, 8)))
-                pop(create2(0, 0, 36, add(offset, 9)))
-                pop(create2(0, 0, 36, add(offset, 10)))
-                pop(create2(0, 0, 36, add(offset, 11)))
-                pop(create2(0, 0, 36, add(offset, 12)))
-                pop(create2(0, 0, 36, add(offset, 13)))
-                pop(create2(0, 0, 36, add(offset, 14)))
-                pop(create2(0, 0, 36, add(offset, 15)))
-                pop(create2(0, 0, 36, add(offset, 16)))
-                pop(create2(0, 0, 36, add(offset, 17)))
-                pop(create2(0, 0, 36, add(offset, 18)))
-                pop(create2(0, 0, 36, add(offset, 19)))
-                pop(create2(0, 0, 36, add(offset, 20)))
-                pop(create2(0, 0, 36, add(offset, 21)))
-                pop(create2(0, 0, 36, add(offset, 22)))
-                pop(create2(0, 0, 36, add(offset, 23)))
-                pop(create2(0, 0, 36, add(offset, 24)))
-                pop(create2(0, 0, 36, add(offset, 25)))
-                pop(create2(0, 0, 36, add(offset, 26)))
-                pop(create2(0, 0, 36, add(offset, 27)))
-                pop(create2(0, 0, 36, add(offset, 28)))
-                pop(create2(0, 0, 36, add(offset, 29)))
-                pop(create2(0, 0, 36, add(offset, 30)))
-                pop(create2(0, 0, 36, add(offset, 31)))
+                pop(create2(0, 0, 35, add(offset, 0)))
+                pop(create2(0, 0, 35, add(offset, 1)))
+                pop(create2(0, 0, 35, add(offset, 2)))
+                pop(create2(0, 0, 35, add(offset, 3)))
+                pop(create2(0, 0, 35, add(offset, 4)))
+                pop(create2(0, 0, 35, add(offset, 5)))
+                pop(create2(0, 0, 35, add(offset, 6)))
+                pop(create2(0, 0, 35, add(offset, 7)))
+                pop(create2(0, 0, 35, add(offset, 8)))
+                pop(create2(0, 0, 35, add(offset, 9)))
+                pop(create2(0, 0, 35, add(offset, 10)))
+                pop(create2(0, 0, 35, add(offset, 11)))
+                pop(create2(0, 0, 35, add(offset, 12)))
+                pop(create2(0, 0, 35, add(offset, 13)))
+                pop(create2(0, 0, 35, add(offset, 14)))
+                pop(create2(0, 0, 35, add(offset, 15)))
+                pop(create2(0, 0, 35, add(offset, 16)))
+                pop(create2(0, 0, 35, add(offset, 17)))
+                pop(create2(0, 0, 35, add(offset, 18)))
+                pop(create2(0, 0, 35, add(offset, 19)))
+                pop(create2(0, 0, 35, add(offset, 20)))
+                pop(create2(0, 0, 35, add(offset, 21)))
+                pop(create2(0, 0, 35, add(offset, 22)))
+                pop(create2(0, 0, 35, add(offset, 23)))
+                pop(create2(0, 0, 35, add(offset, 24)))
+                pop(create2(0, 0, 35, add(offset, 25)))
+                pop(create2(0, 0, 35, add(offset, 26)))
+                pop(create2(0, 0, 35, add(offset, 27)))
+                pop(create2(0, 0, 35, add(offset, 28)))
+                pop(create2(0, 0, 35, add(offset, 29)))
+                pop(create2(0, 0, 35, add(offset, 30)))
+                pop(create2(0, 0, 35, add(offset, 31)))
                 offset := add(offset, 32)
             }
             for {
@@ -212,7 +213,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
             } i {
                 i := sub(i, 1)
             } {
-                pop(create2(0, 0, 36, offset))
+                pop(create2(0, 0, 35, offset))
                 offset := add(offset, 1)
             }
         }
@@ -241,7 +242,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
             )
             mstore(add(data, 53), _bytecodeWord1)
             mstore(add(data, 85), _bytecodeWord2)
-            mstore(add(data, 53), keccak256(add(data, 53), 36))
+            mstore(add(data, 53), keccak256(add(data, 53), 35))
             let ptr := add(data, 21)
             for {
 
