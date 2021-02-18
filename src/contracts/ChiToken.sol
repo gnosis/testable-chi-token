@@ -165,7 +165,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
     function mint(uint256 value) public {
         uint256 offset = totalMinted;
         bytes32 _bytecodeWord1 = bytecodeWord1;
-        bytes4 _bytecodeWord2 = bytecodeWord2;
+        bytes3 _bytecodeWord2 = bytecodeWord2;
         assembly {
             mstore(0, _bytecodeWord1)
             mstore(32, _bytecodeWord2)
@@ -226,7 +226,7 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
         uint256 i;
         uint256 end;
         bytes32 _bytecodeWord1 = bytecodeWord1;
-        bytes4 _bytecodeWord2 = bytecodeWord2;
+        bytes3 _bytecodeWord2 = bytecodeWord2;
         assembly {
             i := sload(totalBurned.slot)
             end := add(i, value)
