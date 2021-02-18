@@ -1,7 +1,6 @@
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-module.exports = {
+import "@nomiclabs/hardhat-waffle";
+
+export default {
   paths: {
     artifacts: "build/artifacts",
     cache: "build/cache",

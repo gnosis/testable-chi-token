@@ -6,4 +6,5 @@ A copy of the [1Inch ChiToken](https://github.com/1inch-exchange/chi) that doesn
 
 ```
 yarn hardhat compile
+yarn hardhat test
 ```

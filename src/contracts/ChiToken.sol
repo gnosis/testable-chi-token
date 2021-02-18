@@ -115,106 +115,133 @@ contract ChiToken is IERC20, ERC20WithoutTotalSupply {
     uint256 public totalMinted;
     uint256 public totalBurned;
 
+    bytes32 immutable bytecodeWord1;
+    bytes3 immutable bytecodeWord2;
+    bytes32 immutable bytecodeHash;
+
+    constructor() {
+        // Documentation adapted from https://github.com/projectchicago/gastoken/blob/master/contract/GST2_ETH.sol#L105
+        // For more information on the opcodes, cf. https://ethervm.io/
+        //
+        // EVM assembler of runtime portion of child contract:
+        //     ;; Pseudocode: if (msg.sender != <address>) { throw; }
+        //     ;;             suicide(msg.sender)
+        //     PUSH20 <address>
+        //     CALLER
+        //     XOR
+        //     PC
+        //     JUMPI
+        //     CALLER
+        //     SELFDESTRUCT
+        // Or in binary: 73____________20 bytes address____________3318585733ff
+        // Since the binary is so short (27 bytes), we can get away
+        // with a very simple initcode:
+        //     PUSH27 73____________20 bytes address____________3318585733ff
+        //     RETURNDATASIZE ;; Push offset 0 for MSTORE call on the stack
+        //     MSTORE ;; at this point, memory locations mem[5] through
+        //            ;; mem[31] contain the runtime portion of the child
+        //            ;; contract. all that's left to do is to RETURN this
+        //            ;; chunk of memory.
+        //     PUSH1 27 ;; length
+        //     PUSH1 5 ;; offset
+        //     RETURN
+        // Or in binary: 7a73____________20 bytes address____________3318585733ff3d52601b6005f3
+        // Almost done! All we have to do is put this short (35 bytes) blob into
+        // memory and call CREATE with the appropriate offsets.
+        bytes32 _bytecodeWord1 =
+            bytes32(
+                0x7a7300000000000000000000000000000000000000003318585733ff3d52601b
+            ) | (bytes32(uint256(address(this))) << 80);
+        bytes3 _bytecodeWord2 = 0x6005f3;
+        bytecodeHash = keccak256(
+            abi.encodePacked(_bytecodeWord1, _bytecodeWord2)
+        );
+        bytecodeWord1 = _bytecodeWord1;
+        bytecodeWord2 = _bytecodeWord2;
+    }
+
     function totalSupply() public view override returns (uint256) {
         return totalMinted - totalBurned;
     }
 
     function mint(uint256 value) public {
         uint256 offset = totalMinted;
+        bytes32 _bytecodeWord1 = bytecodeWord1;
+        bytes3 _bytecodeWord2 = bytecodeWord2;
         assembly {
-            mstore(
-                0,
-                0x746d4946c0e9F43F4Dee607b0eF1fA1c3318585733ff6000526015600bf30000
-            )
-
+            mstore(0, _bytecodeWord1)
+            mstore(32, _bytecodeWord2)
             for {
                 let i := div(value, 32)
             } i {
                 i := sub(i, 1)
             } {
-                pop(create2(0, 0, 30, add(offset, 0)))
-                pop(create2(0, 0, 30, add(offset, 1)))
-                pop(create2(0, 0, 30, add(offset, 2)))
-                pop(create2(0, 0, 30, add(offset, 3)))
-                pop(create2(0, 0, 30, add(offset, 4)))
-                pop(create2(0, 0, 30, add(offset, 5)))
-                pop(create2(0, 0, 30, add(offset, 6)))
-                pop(create2(0, 0, 30, add(offset, 7)))
-                pop(create2(0, 0, 30, add(offset, 8)))
-                pop(create2(0, 0, 30, add(offset, 9)))
-                pop(create2(0, 0, 30, add(offset, 10)))
-                pop(create2(0, 0, 30, add(offset, 11)))
-                pop(create2(0, 0, 30, add(offset, 12)))
-                pop(create2(0, 0, 30, add(offset, 13)))
-                pop(create2(0, 0, 30, add(offset, 14)))
-                pop(create2(0, 0, 30, add(offset, 15)))
-                pop(create2(0, 0, 30, add(offset, 16)))
-                pop(create2(0, 0, 30, add(offset, 17)))
-                pop(create2(0, 0, 30, add(offset, 18)))
-                pop(create2(0, 0, 30, add(offset, 19)))
-                pop(create2(0, 0, 30, add(offset, 20)))
-                pop(create2(0, 0, 30, add(offset, 21)))
-                pop(create2(0, 0, 30, add(offset, 22)))
-                pop(create2(0, 0, 30, add(offset, 23)))
-                pop(create2(0, 0, 30, add(offset, 24)))
-                pop(create2(0, 0, 30, add(offset, 25)))
-                pop(create2(0, 0, 30, add(offset, 26)))
-                pop(create2(0, 0, 30, add(offset, 27)))
-                pop(create2(0, 0, 30, add(offset, 28)))
-                pop(create2(0, 0, 30, add(offset, 29)))
-                pop(create2(0, 0, 30, add(offset, 30)))
-                pop(create2(0, 0, 30, add(offset, 31)))
+                pop(create2(0, 0, 35, add(offset, 0)))
+                pop(create2(0, 0, 35, add(offset, 1)))
+                pop(create2(0, 0, 35, add(offset, 2)))
+                pop(create2(0, 0, 35, add(offset, 3)))
+                pop(create2(0, 0, 35, add(offset, 4)))
+                pop(create2(0, 0, 35, add(offset, 5)))
+                pop(create2(0, 0, 35, add(offset, 6)))
+                pop(create2(0, 0, 35, add(offset, 7)))
+                pop(create2(0, 0, 35, add(offset, 8)))
+                pop(create2(0, 0, 35, add(offset, 9)))
+                pop(create2(0, 0, 35, add(offset, 10)))
+                pop(create2(0, 0, 35, add(offset, 11)))
+                pop(create2(0, 0, 35, add(offset, 12)))
+                pop(create2(0, 0, 35, add(offset, 13)))
+                pop(create2(0, 0, 35, add(offset, 14)))
+                pop(create2(0, 0, 35, add(offset, 15)))
+                pop(create2(0, 0, 35, add(offset, 16)))
+                pop(create2(0, 0, 35, add(offset, 17)))
+                pop(create2(0, 0, 35, add(offset, 18)))
+                pop(create2(0, 0, 35, add(offset, 19)))
+                pop(create2(0, 0, 35, add(offset, 20)))
+                pop(create2(0, 0, 35, add(offset, 21)))
+                pop(create2(0, 0, 35, add(offset, 22)))
+                pop(create2(0, 0, 35, add(offset, 23)))
+                pop(create2(0, 0, 35, add(offset, 24)))
+                pop(create2(0, 0, 35, add(offset, 25)))
+                pop(create2(0, 0, 35, add(offset, 26)))
+                pop(create2(0, 0, 35, add(offset, 27)))
+                pop(create2(0, 0, 35, add(offset, 28)))
+                pop(create2(0, 0, 35, add(offset, 29)))
+                pop(create2(0, 0, 35, add(offset, 30)))
+                pop(create2(0, 0, 35, add(offset, 31)))
                 offset := add(offset, 32)
             }
-
             for {
                 let i := and(value, 0x1F)
             } i {
                 i := sub(i, 1)
             } {
-                pop(create2(0, 0, 30, offset))
+                pop(create2(0, 0, 35, offset))
                 offset := add(offset, 1)
             }
         }
-
         _mint(msg.sender, value);
         totalMinted = offset;
     }
 
-    function computeAddress2(uint256 salt) public pure returns (address child) {
-        assembly {
-            let data := mload(0x40)
-            mstore(
-                data,
-                0xff0000000000004946c0e9F43F4Dee607b0eF1fA1c0000000000000000000000
-            )
-            mstore(add(data, 21), salt)
-            mstore(
-                add(data, 53),
-                0x3c1644c68e5d6cb380c36d1bf847fdbc0c7ac28030025a2fc5e63cce23c16348
-            )
-            child := and(
-                keccak256(data, 85),
-                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            )
-        }
-    }
-
     function _destroyChildren(uint256 value) internal {
+        uint256 data;
+        uint256 i;
+        uint256 end;
+        bytes32 _bytecodeHash = bytecodeHash;
         assembly {
-            let i := sload(totalBurned.slot)
-            let end := add(i, value)
+            i := sload(totalBurned.slot)
+            end := add(i, value)
             sstore(totalBurned.slot, end)
 
-            let data := mload(0x40)
+            data := mload(0x40)
             mstore(
                 data,
-                0xff0000000000004946c0e9F43F4Dee607b0eF1fA1c0000000000000000000000
+                add(
+                    0xff00000000000000000000000000000000000000000000000000000000000000,
+                    shl(0x58, address())
+                )
             )
-            mstore(
-                add(data, 53),
-                0x3c1644c68e5d6cb380c36d1bf847fdbc0c7ac28030025a2fc5e63cce23c16348
-            )
+            mstore(add(data, 53), _bytecodeHash)
             let ptr := add(data, 21)
             for {
 
